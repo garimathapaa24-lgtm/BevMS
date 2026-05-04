@@ -1,40 +1,35 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Servlet implementation class ChangePasswordServlet
- */
-@WebServlet("/ChangePasswordServlet")
+@WebServlet("/changePassword")
 public class ChangePasswordServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-    /**
-     * Default constructor. 
-     */
-    public ChangePasswordServlet() {
-        // TODO Auto-generated constructor stub
+        String userId  = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        String current = req.getParameter("currentPassword");
+        String newPass = req.getParameter("newPassword");
+        String confirm = req.getParameter("confirmPassword");
+
+        if (!newPass.equals(confirm)) {
+            req.setAttribute(StringUtils.ATTR_ERROR, StringUtils.ERR_MISMATCH);
+        } else {
+            int result = new DatabaseController().changePassword(userId, current, newPass);
+            if (result == 1) req.setAttribute(StringUtils.ATTR_SUCCESS, "Password changed successfully!");
+            else if (result == 4) req.setAttribute(StringUtils.ATTR_ERROR, "Current password is incorrect.");
+            else req.setAttribute(StringUtils.ATTR_ERROR, StringUtils.ERR_SERVER);
+        }
+
+        DatabaseController dao = new DatabaseController();
+        req.setAttribute("profile", dao.getProfileInfo(userId));
+        req.getRequestDispatcher(StringUtils.PAGE_PROFILE).forward(req, res);
     }
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
 }
