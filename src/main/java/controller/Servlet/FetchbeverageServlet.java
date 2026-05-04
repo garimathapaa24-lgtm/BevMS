@@ -1,40 +1,40 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import model.BeverageModel;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.List;
 
-/**
- * Servlet implementation class FetchbeverageServlet
- */
-@WebServlet("/FetchbeverageServlet")
-public class FetchbeverageServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+@WebServlet("/home")
+public class FetchBeveragesServlet extends HttpServlet {
 
-    /**
-     * Default constructor. 
-     */
-    public FetchbeverageServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+
+        String userId   = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        String category = req.getParameter("category");
+        String search   = req.getParameter("search");
+
+        DatabaseController dao    = new DatabaseController();
+        List<BeverageModel> bevs;
+
+        if (search != null && !search.trim().isEmpty()) {
+            bevs = dao.searchBeverages(search.trim());
+        } else if (category != null && !category.trim().isEmpty()) {
+            bevs = dao.getBeveragesByCategory(category.trim());
+        } else {
+            bevs = dao.getAllBeverages();
+        }
+
+        req.setAttribute("beverageList", bevs);
+        req.setAttribute("categories",   dao.getAllCategories());
+        req.setAttribute("cartCount",    dao.getCartCount(userId));
+        req.getRequestDispatcher(StringUtils.PAGE_HOME).forward(req, res);
     }
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
 }
