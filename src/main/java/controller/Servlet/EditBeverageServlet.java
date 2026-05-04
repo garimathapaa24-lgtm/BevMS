@@ -1,40 +1,55 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import controller.DatabaseController;
+import model.BeverageModel;
+import util.StringUtils;
 
-/**
- * Servlet implementation class EditBeverageServlet
- */
-@WebServlet("/EditBeverageServlet")
+import javax.servlet.*;
+import javax.servlet.annotation.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.util.UUID;
+
+@WebServlet("/editBeverage")
+@MultipartConfig(maxFileSize = 5 * 1024 * 1024)
 public class EditBeverageServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
 
-    /**
-     * Default constructor. 
-     */
-    public EditBeverageServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        String id = req.getParameter("beverageId");
+        DatabaseController dao = new DatabaseController();
+        req.setAttribute("beverage",   dao.getBeverageById(id));
+        req.setAttribute("categories", dao.getAllCategories());
+        req.getRequestDispatcher(StringUtils.PAGE_EDIT_BEV).forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
+        String bevId    = req.getParameter("beverageId").trim();
+        String name     = req.getParameter("beverageName").trim();
+        String desc     = req.getParameter("description").trim();
+        double price    = Double.parseDouble(req.getParameter("price"));
+        double discount = Double.parseDouble(req.getParameter("discount"));
+        double discAmt  = price * discount / 100;
+        String stock    = req.getParameter("stockQty").trim();
+        String catId    = req.getParameter("categoryId");
 
+        Part imgPart = req.getPart("image");
+        String imgPath = req.getParameter("existingImage");
+
+        if (imgPart != null && imgPart.getSize() > 0) {
+            String fileName  = UUID.randomUUID().toString() + "_" + imgPart.getSubmittedFileName();
+            String uploadDir = getServletContext().getRealPath("/resources/images/");
+            new File(uploadDir).mkdirs();
+            imgPart.write(uploadDir + File.separator + fileName);
+            imgPath = "resources/images/" + fileName;
+        }
+
+        BeverageModel b = new BeverageModel(bevId, name, desc, price, discount, discAmt, stock, catId, imgPath);
+        new DatabaseController().updateBeverage(b);
+        res.sendRedirect(req.getContextPath() + "/pages/beverage_list.jsp");
+    }
 }
