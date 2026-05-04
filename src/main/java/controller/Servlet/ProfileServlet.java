@@ -1,40 +1,50 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import controller.DatabaseController;
+import model.UsersModel;
+import util.StringUtils;
 
-/**
- * Servlet implementation class ProfileServlet
- */
-@WebServlet("/ProfileServlet")
+import javax.servlet.*;
+import javax.servlet.annotation.*;
+import javax.servlet.http.*;
+import java.io.*;
+import java.util.UUID;
+
+@WebServlet("/profile")
+@MultipartConfig(maxFileSize = 2 * 1024 * 1024)
 public class ProfileServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
 
-    /**
-     * Default constructor. 
-     */
-    public ProfileServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        String userId = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        req.setAttribute("profile", new DatabaseController().getProfileInfo(userId));
+        req.getRequestDispatcher(StringUtils.PAGE_PROFILE).forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
+        String userId  = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        String name    = req.getParameter("fullName").trim();
+        String address = req.getParameter("fullAddress") != null ? req.getParameter("fullAddress").trim() : "";
 
+        DatabaseController dao = new DatabaseController();
+
+        // Handle profile photo upload
+        Part imgPart = req.getPart("profileImage");
+        if (imgPart != null && imgPart.getSize() > 0) {
+            String fileName  = UUID.randomUUID() + "_" + imgPart.getSubmittedFileName();
+            String uploadDir = getServletContext().getRealPath("/resources/images/");
+            new File(uploadDir).mkdirs();
+            imgPart.write(uploadDir + File.separator + fileName);
+            dao.updateUserImage(userId, "resources/images/" + fileName);
+        }
+
+        dao.userProfileUpdate(new UsersModel(userId, name, address));
+        req.setAttribute(StringUtils.ATTR_SUCCESS, "Profile updated successfully!");
+        req.setAttribute("profile", dao.getProfileInfo(userId));
+        req.getRequestDispatcher(StringUtils.PAGE_PROFILE).forward(req, res);
+    }
 }
