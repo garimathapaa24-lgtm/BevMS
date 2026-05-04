@@ -1,143 +1,30 @@
 
-package util;
+.admin-body { display: flex; min-height: 100vh; background: #f0f2f5; }
 
-public class StringUtils {
- 
-    public static final String DRIVER    = "com.mysql.cj.jdbc.Driver";
-    public static final String CONN_LINK = "jdbc:mysql://localhost:3306/bevserve?useSSL=false&serverTimezone=UTC";
-    public static final String DB_USER   = "root";
-    public static final String DB_PASS   = "";
-
-    
-    public static final String ROLE_ADMIN = "admin";
-    public static final String ROLE_USER  = "user";
-
-  
-    public static final String SESSION_USER_ID  = "userID";
-    public static final String SESSION_IS_ADMIN = "isAdmin";
-    public static final String ATTR_ERROR       = "errorMessage";
-    public static final String ATTR_SUCCESS     = "successMessage";
-
-
-    public static final String PAGE_LOGIN       = "/pages/login.jsp";
-    public static final String PAGE_HOME        = "/pages/home.jsp";
-    public static final String PAGE_ADMIN_DASH  = "/pages/order_list.jsp";
-    public static final String PAGE_CART        = "/pages/cart-list.jsp";
-    public static final String PAGE_CHECKOUT    = "/pages/checkout.jsp";
-    public static final String PAGE_ORDER_CONF  = "/pages/order_confirm.jsp";
-    public static final String PAGE_PROFILE     = "/pages/profile.jsp";
-    public static final String PAGE_BEV_LIST    = "/pages/beverage_list.jsp";
-    public static final String PAGE_ADD_BEV     = "/pages/add_beverage.jsp";
-    public static final String PAGE_EDIT_BEV    = "/pages/edit_beverage.jsp";
-    public static final String PAGE_CAT_LIST    = "/pages/category_list.jsp";
-    public static final String PAGE_USER_MANAGE = "/pages/manage_users.jsp";
-    public static final String PAGE_CONTACT     = "/pages/contact.jsp";
-    public static final String PAGE_ERROR       = "/pages/error.jsp";
-
-    // ── SQL: Users ────────────────────────────────────────────────────────────
-    public static final String SQL_INSERT_USER =
-        "INSERT INTO users (User_ID, Full_Name, Email, Phone_Number, Password, Role) VALUES (?,?,?,?,?,?)";
-    public static final String SQL_GET_LOGIN =
-        "SELECT User_ID, Password, Role FROM users WHERE User_ID = ?";
-    public static final String SQL_GET_PROFILE =
-        "SELECT * FROM users WHERE User_ID = ?";
-    public static final String SQL_UPDATE_PROFILE =
-        "UPDATE users SET Full_Name=?, ADDRESS=? WHERE User_ID=?";
-    public static final String SQL_UPDATE_PASSWORD =
-        "UPDATE users SET Password=? WHERE User_ID=?";
-    public static final String SQL_UPDATE_USER_IMG =
-        "UPDATE users SET IMG_LINK=? WHERE User_ID=?";
-    public static final String SQL_GET_ALL_USERS =
-        "SELECT * FROM users WHERE Role='user'";
-    public static final String SQL_DELETE_USER =
-        "DELETE FROM users WHERE User_ID=?";
-    public static final String SQL_CHECK_USER_ID =
-        "SELECT User_ID FROM users WHERE User_ID=?";
-    public static final String SQL_CHECK_EMAIL =
-        "SELECT User_ID FROM users WHERE Email=?";
-    public static final String SQL_CHECK_PHONE =
-        "SELECT User_ID FROM users WHERE Phone_Number=?";
-
-   
-    public static final String SQL_GET_ALL_CATS =
-        "SELECT * FROM categories";
-    public static final String SQL_GET_CAT_BY_ID =
-        "SELECT * FROM categories WHERE Category_ID=?";
-    public static final String SQL_INSERT_CAT =
-        "INSERT INTO categories (Category_ID, Category_Name, Category_Desc) VALUES (?,?,?)";
-    public static final String SQL_UPDATE_CAT =
-        "UPDATE categories SET Category_Name=?, Category_Desc=? WHERE Category_ID=?";
-    public static final String SQL_DELETE_CAT =
-        "DELETE FROM categories WHERE Category_ID=?";
-
-   
-    public static final String SQL_GET_ALL_BEVS =
-        "SELECT b.*, c.Category_Name FROM beverages b LEFT JOIN categories c ON b.Category_ID=c.Category_ID";
-    public static final String SQL_GET_BEV_BY_ID =
-        "SELECT b.*, c.Category_Name FROM beverages b LEFT JOIN categories c ON b.Category_ID=c.Category_ID WHERE b.Beverage_ID=?";
-    public static final String SQL_GET_BEVS_BY_CAT =
-        "SELECT b.*, c.Category_Name FROM beverages b LEFT JOIN categories c ON b.Category_ID=c.Category_ID WHERE b.Category_ID=?";
-    public static final String SQL_SEARCH_BEVS =
-        "SELECT b.*, c.Category_Name FROM beverages b LEFT JOIN categories c ON b.Category_ID=c.Category_ID WHERE b.Beverage_Name LIKE ?";
-    public static final String SQL_INSERT_BEV =
-        "INSERT INTO beverages (Beverage_ID,Beverage_Name,Description,Price,Discount,Discount_Amt,Stock_Qty,Category_ID,Image) VALUES (?,?,?,?,?,?,?,?,?)";
-    public static final String SQL_UPDATE_BEV =
-        "UPDATE beverages SET Beverage_Name=?,Description=?,Price=?,Discount=?,Discount_Amt=?,Stock_Qty=?,Category_ID=?,Image=? WHERE Beverage_ID=?";
-    public static final String SQL_DELETE_BEV =
-        "DELETE FROM beverages WHERE Beverage_ID=?";
-
-  
-    public static final String SQL_ADD_CART =
-        "INSERT INTO carts (Cart_ID,User_ID,Beverage_ID,Quantity) VALUES (?,?,?,?)";
-    public static final String SQL_GET_CART =
-        "SELECT c.*,b.Beverage_Name,b.Price,b.Image FROM carts c JOIN beverages b ON c.Beverage_ID=b.Beverage_ID WHERE c.User_ID=?";
-    public static final String SQL_REMOVE_CART =
-        "DELETE FROM carts WHERE Cart_ID=?";
-    public static final String SQL_CLEAR_CART =
-        "DELETE FROM carts WHERE User_ID=?";
-    public static final String SQL_CART_COUNT =
-        "SELECT COUNT(*) AS cnt FROM carts WHERE User_ID=?";
-    public static final String SQL_CHECK_CART_DUP =
-        "SELECT Cart_ID FROM carts WHERE User_ID=? AND Beverage_ID=?";
-
-   
-    public static final String SQL_INSERT_ORDER =
-        "INSERT INTO orders (Order_ID,User_ID,Total_Amount,Status,City,Address,Payment) VALUES (?,?,?,?,?,?,?)";
-    public static final String SQL_INSERT_ORDER_ITEM =
-        "INSERT INTO order_items (Order_ID,Beverage_ID,Line_Quantity) VALUES (?,?,?)";
-    public static final String SQL_GET_ORDER_DETAILS =
-        "SELECT o.Order_ID,o.User_ID,u.Full_Name AS Customer_Name,oi.Beverage_ID,b.Beverage_Name," +
-        "o.Total_Amount,o.Status,u.IMG_LINK FROM orders o " +
-        "JOIN order_items oi ON o.Order_ID=oi.Order_ID " +
-        "JOIN beverages b ON oi.Beverage_ID=b.Beverage_ID " +
-        "JOIN users u ON o.User_ID=u.User_ID ORDER BY o.Order_ID DESC";
-    public static final String SQL_UPDATE_STATUS =
-        "UPDATE orders SET Status=? WHERE Order_ID=?";
-    public static final String SQL_COUNT_ORDERS =
-        "SELECT COUNT(*) AS cnt FROM orders";
-    public static final String SQL_COUNT_PENDING =
-        "SELECT COUNT(*) AS cnt FROM orders WHERE Status='Pending'";
-    public static final String SQL_COUNT_DELIVERED =
-        "SELECT COUNT(*) AS cnt FROM orders WHERE Status='Delivered'";
-    public static final String SQL_COUNT_USERS =
-        "SELECT COUNT(*) AS cnt FROM users WHERE Role='user'";
-
- 
-    public static final String SQL_INSERT_INQUIRY =
-        "INSERT INTO inquiry (Inquiry_ID,User_ID,Subject,Created_At,Message) VALUES (?,?,?,NOW(),?)";
-
-
-    public static final String ERR_USER_ID   = "User ID must be at least 6 characters.";
-    public static final String ERR_NAME      = "Full name may only contain letters and spaces.";
-    public static final String ERR_EMAIL     = "Please enter a valid email address.";
-    public static final String ERR_PHONE     = "Phone number must be exactly 10 digits.";
-    public static final String ERR_PASS      = "Password must be at least 8 characters with uppercase, digit, and special character.";
-    public static final String ERR_MISMATCH  = "Passwords do not match.";
-    public static final String ERR_DUPLICATE = "User ID, Email, or Phone Number already exists.";
-    public static final String ERR_LOGIN     = "Username or password is incorrect.";
-    public static final String ERR_NO_USER   = "No account found. Please register first.";
-    public static final String ERR_CART_DUP  = "This beverage is already in your cart!";
-    public static final String ERR_SERVER    = "Server error. Please try again.";
-
-    private StringUtils() {}
+.admin-sidebar {
+    width: 220px; flex-shrink: 0;
+    background: #1a1a2e;
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
 }
+.sidebar-brand { padding: 1.5rem 1.2rem; font-size: 1.2rem; font-weight: 700; color: #fff; border-bottom: 1px solid rgba(255,255,255,.1); }
+.sidebar-nav { display: flex; flex-direction: column; padding: 1rem 0; flex: 1; }
+.sidebar-link { padding: .7rem 1.2rem; color: #a0aec0; font-size: .9rem; transition: all .15s; }
+.sidebar-link:hover { background: rgba(255,255,255,.08); color: #fff; }
+.sidebar-logout { margin-top: auto; color: #e24b4a; }
+
+.admin-content { flex: 1; padding: 2rem; overflow: auto; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: .5rem; }
+.admin-header h2 { font-size: 1.4rem; color: #1B4F8C; }
+
+
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi-card { background: #fff; border-radius: 10px; border: 1px solid #e0e4ea; padding: 1.25rem 1.5rem; }
+.kpi-value { font-size: 2rem; font-weight: 700; color: #1B4F8C; }
+.kpi-label { font-size: .82rem; color: #6c757d; margin-top: .2rem; }
+.kpi-warning .kpi-value { color: #b7770d; }
+.kpi-success .kpi-value { color: #1e8449; }
+.kpi-info    .kpi-value { color: #2471a3; }
+
+
+.form-select-sm { padding: .3rem .5rem; border: 1px solid #d1d5db; border-radius: 5px; font-size: .82rem; }
