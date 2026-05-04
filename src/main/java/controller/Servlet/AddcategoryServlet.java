@@ -1,40 +1,31 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import model.CategoryModel;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Servlet implementation class AddcategoryServlet
- */
-@WebServlet("/AddcategoryServlet")
-public class AddcategoryServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+@WebServlet("/addCategory")
+public class AddCategoryServlet extends HttpServlet {
 
-    /**
-     * Default constructor. 
-     */
-    public AddcategoryServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        req.setAttribute("categories", new DatabaseController().getAllCategories());
+        req.getRequestDispatcher(StringUtils.PAGE_CAT_LIST).forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        String id   = req.getParameter("categoryId").trim();
+        String name = req.getParameter("categoryName").trim();
+        String desc = req.getParameter("categoryDesc").trim();
+        new DatabaseController().addCategory(new CategoryModel(id, name, desc));
+        res.sendRedirect(req.getContextPath() + "/addCategory");
+    }
 }
