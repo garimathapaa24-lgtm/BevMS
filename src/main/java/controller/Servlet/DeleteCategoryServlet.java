@@ -1,40 +1,15 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Servlet implementation class DeleteCategoryServlet
- */
-@WebServlet("/DeleteCategoryServlet")
+@WebServlet("/deleteCategory")
 public class DeleteCategoryServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-
-    /**
-     * Default constructor. 
-     */
-    public DeleteCategoryServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        new DatabaseController().deleteCategory(req.getParameter("categoryId"));
+        res.sendRedirect(req.getContextPath() + "/addCategory");
     }
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
 }
