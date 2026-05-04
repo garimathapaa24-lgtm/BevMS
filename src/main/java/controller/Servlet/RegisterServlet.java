@@ -1,40 +1,66 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import model.UsersModel;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Servlet implementation class RegisterServlet
- */
-@WebServlet("/RegisterServlet")
+@WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
 
-    /**
-     * Default constructor. 
-     */
-    public RegisterServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+        req.getRequestDispatcher("/pages/register.jsp").forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
+        String userId   = req.getParameter("userID").trim();
+        String fullName = req.getParameter("fullName").trim();
+        String email    = req.getParameter("email").trim();
+        String phone    = req.getParameter("phoneNumber").trim();
+        String password = req.getParameter("password");
+        String repass   = req.getParameter("retypePassword");
 
+        String error = null;
+        if (userId.length() < 6)                             error = StringUtils.ERR_USER_ID;
+        else if (!fullName.matches("[a-zA-Z ]+"))            error = StringUtils.ERR_NAME;
+        else if (!email.matches("^[\\w.-]+@[\\w.-]+\\.\\w{2,}$")) error = StringUtils.ERR_EMAIL;
+        else if (!phone.matches("\\d{10}"))                  error = StringUtils.ERR_PHONE;
+        else if (!password.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=!]).{8,}$"))
+                                                              error = StringUtils.ERR_PASS;
+        else if (!password.equals(repass))                   error = StringUtils.ERR_MISMATCH;
+
+        if (error != null) {
+            req.setAttribute(StringUtils.ATTR_ERROR, error);
+            req.getRequestDispatcher("/pages/register.jsp").forward(req, res);
+            return;
+        }
+
+        DatabaseController dao = new DatabaseController();
+        if (dao.checkDuplicacy(StringUtils.SQL_CHECK_USER_ID, userId) ||
+            dao.checkDuplicacy(StringUtils.SQL_CHECK_EMAIL, email)    ||
+            dao.checkDuplicacy(StringUtils.SQL_CHECK_PHONE, phone)) {
+            req.setAttribute(StringUtils.ATTR_ERROR, StringUtils.ERR_DUPLICATE);
+            req.getRequestDispatcher("/pages/register.jsp").forward(req, res);
+            return;
+        }
+
+        UsersModel u = new UsersModel(userId, fullName, email, password, phone, StringUtils.ROLE_USER);
+        int result   = dao.addUser(u);
+
+        if (result == 1) {
+            res.sendRedirect(req.getContextPath() + "/login?registered=true");
+        } else {
+            req.setAttribute(StringUtils.ATTR_ERROR, StringUtils.ERR_SERVER);
+            req.getRequestDispatcher("/pages/register.jsp").forward(req, res);
+        }
+    }
 }
