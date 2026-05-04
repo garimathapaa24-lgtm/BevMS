@@ -1,40 +1,25 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-/**
- * Servlet implementation class OrderServlet
- */
-@WebServlet("/OrderServlet")
+@WebServlet("/orders")
 public class OrderServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-    /**
-     * Default constructor. 
-     */
-    public OrderServlet() {
-        // TODO Auto-generated constructor stub
+        DatabaseController dao = new DatabaseController();
+        req.setAttribute("orderList",       dao.getAllOrderDetails());
+        req.setAttribute("totalOrders",     dao.getOrderCount());
+        req.setAttribute("pendingOrders",   dao.getPendingCount());
+        req.setAttribute("deliveredOrders", dao.getDeliveredCount());
+        req.setAttribute("totalUsers",      dao.getUserCount());
+        req.getRequestDispatcher(StringUtils.PAGE_ADMIN_DASH).forward(req, res);
     }
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
-
 }
