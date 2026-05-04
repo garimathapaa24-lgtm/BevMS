@@ -1,40 +1,66 @@
-package controller.Servlet;
+package controller.servlets;
 
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import controller.DatabaseController;
+import model.*;
+import util.StringUtils;
+
+import javax.servlet.*;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
 import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
-/**
- * Servlet implementation class CheckoutServlet
- */
-@WebServlet("/CheckoutServlet")
-public class CheckoutServlet extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+@WebServlet("/checkout")
+public class CheckOutServlet extends HttpServlet {
 
-    /**
-     * Default constructor. 
-     */
-    public CheckoutServlet() {
-        // TODO Auto-generated constructor stub
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
+
+        String userId = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        DatabaseController dao   = new DatabaseController();
+        List<BeverageModel> cart = dao.getCartItems(userId);
+
+        if (cart.isEmpty()) {
+            res.sendRedirect(req.getContextPath() + "/cart"); return;
+        }
+
+        double total = 0;
+        for (BeverageModel b : cart) {
+            int qty = Integer.parseInt(b.getQuantity() != null ? b.getQuantity() : "1");
+            total += b.getPrice() * qty;
+        }
+
+        req.setAttribute("cartItems",  cart);
+        req.setAttribute("grandTotal", String.format("%.2f", total));
+        req.getRequestDispatcher(StringUtils.PAGE_CHECKOUT).forward(req, res);
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse res)
+            throws ServletException, IOException {
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doGet(request, response);
-	}
+        String userId  = (String) req.getSession().getAttribute(StringUtils.SESSION_USER_ID);
+        String city    = req.getParameter("city").trim();
+        String address = req.getParameter("address").trim();
+        String payment = req.getParameter("payment");
+        String total   = req.getParameter("grandTotal");
 
+        DatabaseController  dao   = new DatabaseController();
+        List<BeverageModel> cart  = dao.getCartItems(userId);
+
+        String orderId = "ORD" + UUID.randomUUID().toString().substring(0, 7).toUpperCase();
+        OrderModel order = new OrderModel(orderId, userId, total, "Pending", city, address, payment);
+        dao.addOrder(order);
+
+        for (BeverageModel b : cart) {
+            String qty = b.getQuantity() != null ? b.getQuantity() : "1";
+            dao.addOrderItem(new OrderItemModel(orderId, b.getBeverageId(), qty));
+        }
+
+        dao.clearCart(userId);
+        req.getSession().setAttribute("lastOrderId", orderId);
+        res.sendRedirect(req.getContextPath() + StringUtils.PAGE_ORDER_CONF);
+    }
 }
